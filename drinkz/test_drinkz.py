@@ -12,11 +12,73 @@ sys.path.insert(0, 'bin/') # allow _mypath to be loaded; @CTB hack hack hack
 from cStringIO import StringIO
 import imp
 
-from . import db, load_bulk_data
-
+from . import db
+from . import load_bulk_data
 def test_foo():
     # this test always passes; it's just to show you how it's done!
     print 'Note that output from passing tests is hidden'
+
+
+def test1():
+    print 'Testing for inbetween comments.'
+
+    scriptpath = 'bin/load-liquor-types'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([scriptpath, 'test-data/bottle-types-data-3.txt'])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+    print 'Can read with comments'
+
+def test2():
+    print 'Testing for failure if at end of file'
+    scriptpath = 'bin/load-liquor-types'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([scriptpath, 'test-data/bottle-types-data-4.txt'])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+    print 'Wont fail on empty lines'
+
+def test3():
+    print 'Testing for correct amounts of liquor script'
+    scriptpath = 'bin/load-liquor-inventory'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([scriptpath, 'test-data/inventory1.txt'])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+    print 'Got the inventory succesfully'
+
+def test4():
+    print 'Should fail because of incorrect formatting'
+    scriptpath = 'bin/load-liquor-inventory'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([scriptpath, 'test-data/inventory2.txt'])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+    print 'Failed succesfully.'
+
+
+def test5():
+    print 'Testing summing alcohol correctly'
+    db._reset_db()
+    db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+    db.add_bottle_type("Vodka","Burnettes","vodka")
+
+    db.add_to_inventory("Vodka","Burnettes","500 ml")
+    amount = db.get_liquor_amount("Vodka","Burnettes")
+    assert (amount == "500 ml")
+
+    db.add_to_inventory("Vodka","Burnettes","10000 oz")
+    amount = db.get_liquor_amount("Vodka","Burnettes")
+    assert (amount == "296235 ml")
+    
+    db.add_to_inventory("Vodka","Burnettes","10000 oz")
+    amount = db.get_liquor_amount("Vodka","Burnettes")
+    assert (amount == "591970 ml")
+    
+
+
+	
+
 
 def test_add_bottle_type_1():
     print 'Note that output from failing tests is printed out!'

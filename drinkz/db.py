@@ -1,4 +1,8 @@
 """
+Yevgeny Khessin
+A39652176
+HOMEWORK 2 
+CSE491
 Database functionality for drinkz information.
 """
 
@@ -47,11 +51,23 @@ def check_inventory(mfg, liquor):
 def get_liquor_amount(mfg, liquor):
     "Retrieve the total amount of any given liquor currently in inventory."
     amounts = []
+    liquorvolume = 0
     for (m, l, amount) in _inventory_db:
         if mfg == m and liquor == l:
             amounts.append(amount)
+    #go through the list of amounts and calcualte the volume in ml
+    for liquor in amounts:
+	try: 
+		quant = liquor.split(' ')  #split the line 
+		if quant[1] == "ml":  #if its in ml, just add it
+			liquorvolume +=int(quant[0])
+		elif quant[1] == "oz":  #if its in oz, convert
+			liquorvolume +=int(float(quant[0])*29.5735)
+	except IndexError:
+		print "Incorrectly Formatted Amount"
+    return str(liquorvolume) + " ml"  #return properly formatted
 
-    return amounts[0]
+
 
 def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."
