@@ -1,0 +1,8 @@
+# this file has, at the end, a blank line, which should be handled
+# (ignored!) by our loading script - just like these comments.
+Johnnie Walker,Black Label,blended scotch
+# lol test
+Johnnie Walker,Red Label,blended scotch
+# lol test
+Johnnie Walker,Green Label,blended scotch
+#lol test

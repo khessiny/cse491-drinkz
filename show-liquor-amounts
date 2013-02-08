@@ -1,0 +1,39 @@
+"""
+Yevgeny Khessin
+A39652176
+HOMEWORK 2 
+CSE491
+"""
+
+import drinkz.db
+
+drinkz.db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+drinkz.db.add_bottle_type('Johnnie Walker', 'Red Label', 'scotch')
+drinkz.db.add_bottle_type('Cheap Vodka', 'Burnettes', 'cheapest vodka')
+
+
+drinkz.db.add_to_inventory('Johnnie Walker', 'Black Label', '1000 ml')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Black Label', '100 ml')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Black Label', '50 ml')
+
+drinkz.db.add_to_inventory('Johnnie Walker', 'Red Label', '50 ml')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Red Label', '150 ml')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Red Label', '250 ml')
+
+
+drinkz.db.add_to_inventory('Cheap Vodka', 'Burnettes', '50 ml')
+drinkz.db.add_to_inventory('Cheap Vodka', 'Burnettes', '50 ml')
+drinkz.db.add_to_inventory('Cheap Vodka', 'Burnettes', '50 ml')
+
+#make a list of already posted items
+list = set()
+
+print 'Manufacturer\tLiquor\t        Amount(ml)'
+print '------------\t-----------\t----------'
+for mfg, liquor in drinkz.db.get_liquor_inventory():  #for every item returned 
+    if (mfg,liquor) in list:  #check if in posted list  or go on
+	continue
+    else:
+	list.add((mfg,liquor)) #add to posted list 
+    	quant = drinkz.db.get_liquor_amount(mfg,liquor) #get quaniity
+    	print '%s\t%s\t%s' % (mfg, liquor, quant)  #post to screen
