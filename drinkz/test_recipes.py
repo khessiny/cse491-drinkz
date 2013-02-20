@@ -1,4 +1,4 @@
-"""
+""""
 Tests basic recipe API.
 """
 
