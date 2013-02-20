@@ -7,14 +7,14 @@ Database functionality for drinkz information.
 """
 
 # private singleton variables at module level
-_bottle_types_db = []
-_inventory_db = []
+_bottle_types_db = set([])
+_inventory_db = {}
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
     global _bottle_types_db, _inventory_db
-    _bottle_types_db = []
-    _inventory_db = []
+    _bottle_types_db ={[]}
+    _inventory_db = {}
 
 # exceptions in Python inherit from Exception and generally don't need to
 # override any methods.
