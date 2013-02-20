@@ -29,8 +29,12 @@ def filereader(fp):
 		except IndexError: #failure to read, dont fail
 			print "Something wasnt formatted correctly."
 			continue
-		#now we just have the lines we want
-		(maker,name,value) = line  #get them separate
+		#now we just have the lines we wan
+		try:
+			(maker,name,value) = line  #get them separate
+		except ValueError:
+			print "Not enough arguments, please use maker,name,amount"
+			continue
 		yield maker,name,value #return the mfg, name and quanitity
 
 

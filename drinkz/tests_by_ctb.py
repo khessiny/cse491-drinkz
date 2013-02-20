@@ -20,6 +20,7 @@ def test_get_liquor_amount_gallon():
 
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
     assert amount == 3785.41, amount
+    
 
 def test_uniqify_inventory():
     """

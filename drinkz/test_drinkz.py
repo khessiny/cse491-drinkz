@@ -21,7 +21,7 @@ def test_foo():
 
 def test1():
     print 'Testing for inbetween comments.'
-
+    db._reset_db()
     scriptpath = 'bin/load-liquor-types'
     module = imp.load_source('llt', scriptpath)
     exit_code = module.main([scriptpath, 'test-data/bottle-types-data-3.txt'])
@@ -31,6 +31,7 @@ def test1():
 
 def test2():
     print 'Testing for failure if at end of file'
+    db._reset_db()
     scriptpath = 'bin/load-liquor-types'
     module = imp.load_source('llt', scriptpath)
     exit_code = module.main([scriptpath, 'test-data/bottle-types-data-4.txt'])
@@ -40,19 +41,20 @@ def test2():
 
 def test3():
     print 'Testing for correct amounts of liquor script'
+    db._reset_db()
     scriptpath = 'bin/load-liquor-inventory'
     module = imp.load_source('llt', scriptpath)
-    exit_code = module.main([scriptpath, 'test-data/inventory1.txt'])
+    exit_code = module.main([scriptpath,'test-data/bottle-types-data-3.txt', 'test-data/inventory1.txt'])
 
     assert exit_code == 0, 'non zero exit code %s' % exit_code
     print 'Got the inventory succesfully'
 
 def test4():
     print 'Should fail because of incorrect formatting'
+    db._reset_db()
     scriptpath = 'bin/load-liquor-inventory'
     module = imp.load_source('llt', scriptpath)
-    exit_code = module.main([scriptpath, 'test-data/inventory2.txt'])
-
+    exit_code = module.main([scriptpath,'test-data/bottle-types-data-3.txt', 'test-data/inventory2.txt'])
     assert exit_code == 0, 'non zero exit code %s' % exit_code
     print 'Failed succesfully.'
 
@@ -65,16 +67,8 @@ def test5():
 
     db.add_to_inventory("Vodka","Burnettes","500 ml")
     amount = db.get_liquor_amount("Vodka","Burnettes")
-    assert (amount == "500 ml")
-
-    db.add_to_inventory("Vodka","Burnettes","10000 oz")
-    amount = db.get_liquor_amount("Vodka","Burnettes")
-    assert (amount == "296235 ml")
-    
-    db.add_to_inventory("Vodka","Burnettes","10000 oz")
-    amount = db.get_liquor_amount("Vodka","Burnettes")
-    assert (amount == "591970 ml")
-    
+    print amount
+    assert (amount == 500)
 
 
 	
@@ -110,7 +104,8 @@ def test_get_liquor_amount_1():
     db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
     db.add_to_inventory('Johnnie Walker', 'Black Label', '1000 ml')
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1000 ml', amount
+    print amount
+    assert amount == 1000, amount
 
 def test_bulk_load_inventory_1():
     db._reset_db()
@@ -132,9 +127,9 @@ def test_get_liquor_amount_2():
     data = "Johnnie Walker,Black Label,1000 ml"
     fp = StringIO(data)                 # make this look like a file handle
     n = load_bulk_data.load_inventory(fp)
-
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1000 ml', amount
+    print amount
+    assert amount == 1000, amount
 
 def test_bulk_load_bottle_types_1():
     db._reset_db()
