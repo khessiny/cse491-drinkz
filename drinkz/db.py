@@ -8,20 +8,22 @@ Database functionality for drinkz information.
 
 # private singleton variables at module level
 _bottle_types_db = set([])
-_inventory_db = {}
-_recipe_db={}
+_inventory_db = dict()
+_recipe_db=dict()
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
-    global _bottle_types_db, _inventory_db
+    global _bottle_types_db, _inventory_db, _recipe_db
     _bottle_types_db =set([])
-    _inventory_db = {}
-    _recipe_db= {}
+    _inventory_db = dict()
+    _recipe_db= dict()
 
 # exceptions in Python inherit from Exception and generally don't need to
 # override any methods.
 class LiquorMissing(Exception):
     pass
+
+
 
 def add_bottle_type(mfg, liquor, typ):
     "Add the given bottle type into the drinkz database."
@@ -41,13 +43,13 @@ def add_to_inventory(mfg, liquor, amount):
         raise LiquorMissing(err)
 
     # just add it to the inventory database as a tuple, for now.
-    try:
-    	current = _inventory_db[(mfg, liquor)] #get curent amount
-    except KeyError:
-    	current = 0
+    if check_inventory(mfg,liquor): #try to gsee if it is in the inventory 
+    	current = _inventory_db[(mfg, liquor)] #get current amount if it is 
+    else:
+    	current = 0 #if it isnt, adding to inventory, current amount is 0 
     	pass
-    add = convert_to_ml(amount) #new amount to add
-    finalamount = add+current
+    add = convert_to_ml(amount) #new amount to add #convert new amount 
+    finalamount = add+current #new total 
     _inventory_db[(mfg, liquor)]=finalamount #put the final value back in
 
 def check_inventory(mfg, liquor):
@@ -75,54 +77,63 @@ def get_liquor_amount(mfg, liquor):
 
 
 
+
 def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."
     for (m, l) in _inventory_db:
-        yield m, l
+        yield m, l 
 
 
 def convert_to_ml(amount):
-    if("ml") in amount:
-        amount = amount.strip('ml')
-        amount = amount.strip()
-        result = float(amount)
+    if("ml") in amount: #dont change anything 
+        amount = amount.strip('ml') #strips characters
+        amount = amount.strip() #strip whitespace
+        final = float(amount)
     elif("oz") in amount:
-        amount = amount.strip('oz')
-        amount = amount.strip()
-        result = (float(amount)*29.5735)#1 oz=29.57ml
+        amount = amount.strip('oz') #strips characters
+        amount = amount.strip()#strip whitespace
+        final = (float(amount)*29.5735)
     elif("gallon") in amount:
-        amount = amount.strip('gallon')
-        amount = amount.strip()
-        result = (float(amount)*3785.41)
+        amount = amount.strip('gallon') #strips characters
+        amount = amount.strip() #strip whitespace
+        final = (float(amount)*3785.41)
     elif("liter") in amount:
-        amount = amount.strip('liter')
-        amount = amount.strip()
-        result = (float(amount)*1000)
+        amount = amount.strip('liter') #strips characters
+        amount = amount.strip() #strip whitespace
+        final = (float(amount)*1000)
     else:
         assert 0, amount
 
-    return result 
+    return final 
 
 
-    return 0
+
+class DuplicateRecipeName(Exception):
+    pass
 
 
-add_recipe(r):
+
+def add_recipe(recipe):
     #add this recipe to dictionary, the name is the key and the ingridients are value
-   if(r.name in _recipe_db.keys()):
-      print "This recipe already exists"
+   if recipe.recipename in _recipe_db:  # if the value is in the keys, raise duplicate exception
+	raise DuplicateRecipeName()
    else:
-      _recipe_db[r.name] = r.ingridients
- 
+      _recipe_db[recipe.recipename] = recipe   #store the whole recipe object
 
-get_recipe(name):
+
+def get_recipe(name):
     #retrieve the recipe
-   if(name in _recipe_db.keys()):
-      return _recipe_db[name]
-   else:
-      print "There is no recipe by this name."
-      return 0
-   
+   if name in _recipe_db: #if the recipe exists
+	return _recipe_db[name]  
 
-get_all_recipes():
-    return _recipe_db
+def get_all_recipes():
+    return _recipe_db.values() #returns all the values as a list
+
+
+def check_inventory_for_type(types):
+    listtypes=[]
+    for (m, l, t) in _bottle_types_db:
+ 	 print m, l, t
+         if types == t:
+         	listtypes.append((m,l))
+    return listtypes

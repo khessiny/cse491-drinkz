@@ -107,6 +107,7 @@ class TestIngredients(object):
         r = recipes.Recipe('whiskey bath', [('blended scotch', '6 liter')])
 
         missing = r.need_ingredients()
+	print missing
         assert missing == [('blended scotch', 1000.0)]
 
     def test_generic_replacement_no_mix(self):
