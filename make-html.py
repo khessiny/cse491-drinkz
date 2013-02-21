@@ -57,7 +57,17 @@ fp.close()
 fp = open('html/recipes.html', 'w')
 
 print >>fp, "<b>Recipes</b><p></p>"
+allrecipes = db.get_all_recipes()
+sendtopage = "<ol>"
+for recipe in allrecipes:
+	if(recipe.need_ingredients() == []):
+		lacking = "Yes, needs more!"
+	else:
+		lacking = "No, drink now!"
+	sendtopage += "<li>" + recipe.recipename + "Have all the Ingridients? " + lacking + "</li>\n"
 
+sendtopage = sendtopage + "</ol>"
+print >> fp, sendtopage
 
 print >>fp, """
 
@@ -83,16 +93,18 @@ list = set()
 
 print >> fp, "<p>Manufacturer             Liquor          Amount(ml)</p>"
 print >> fp, "-------------------|-------------------|------------------"
+sendtopage = "<ol>"
 for mfg, liquor in db.get_liquor_inventory():  #for every item returned 
     if (mfg,liquor) in list:  #check if in posted list  or go on
 	continue
     else:
 	list.add((mfg,liquor)) #add to posted list 
     	quant = db.get_liquor_amount(mfg,liquor) #get quaniity
-    	print >> fp,"<p>%s\t%s\t%s</p>" % (mfg, liquor, quant)
-
+	newquant=str(quant)
+    	sendtopage +="<li>" + mfg + " " + liquor + " " + newquant +"<li>\n"
+sendtopage = sendtopage + "</ol>"
+print >>fp, sendtopage
 print >>fp, """
-
 OTHER PAGES:
 <p><a href='index.html'>Back to Index</a></p>
 <p><a href='inventory.html'>Inventory</a></p>
@@ -111,15 +123,15 @@ fp.close()
 fp = open('html/liquor_types.html', 'w')
 
 print >>fp, "<b>Liquor Types</b><p></p>"
-
+sendtopage = "<ol>"
 print >> fp, "<p>Manufacturer              Liquor</p>"
 print >> fp, "<p>------------------|-------------</p>"
 for mfg, liquor in db.get_liquor_inventory():
-    print >> fp,"<p>%s\t%s</p>" % (mfg, liquor)
+    sendtopage +="<li>" + mfg + " " + liquor + "<li>\n"
 
 
+print >>fp, sendtopage
 print >>fp, """
-
 <p>OTHER PAGES:</p>
 <p><a href='index.html'>Back to Index</a></p>
 <p><a href='inventory.html'>Inventory</a></p>
