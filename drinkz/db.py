@@ -1,9 +1,14 @@
 """
 Yevgeny Khessin
 A39652176
-HOMEWORK 2 
+HOMEWORK 3
 CSE491
 Database functionality for drinkz information.
+
+
+I chose to use a dictionary to store the class recipe by the recipe name. This preserves the structure
+of the class and makes it easy to get the item and edit the item.
+
 """
 
 # private singleton variables at module level

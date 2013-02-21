@@ -14,7 +14,9 @@ class Recipe():
       		needed = db.convert_to_ml(quantity)
 	 	available = db.check_inventory_for_type(type)
         	for (m,l) in available:
-			volume = volume + db.get_liquor_amount(m,l)
+			vol = db.get_liquor_amount(m,l)
+			if vol > volume:
+				volume = vol
 		if volume < needed:
 			missing.append((type,needed - volume))
 			volume = 0
