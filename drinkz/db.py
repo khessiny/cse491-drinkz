@@ -10,6 +10,7 @@ I chose to use a dictionary to store the class recipe by the recipe name. This p
 of the class and makes it easy to get the item and edit the item.
 
 """
+import convert
 
 # private singleton variables at module level
 _bottle_types_db = set([])
@@ -53,7 +54,7 @@ def add_to_inventory(mfg, liquor, amount):
     else:
     	current = 0 #if it isnt, adding to inventory, current amount is 0 
     	pass
-    add = convert_to_ml(amount) #new amount to add #convert new amount 
+    add = convert.convert_to_ml(amount) #new amount to add #convert new amount 
     finalamount = add+current #new total 
     _inventory_db[(mfg, liquor)]=finalamount #put the final value back in
 
@@ -87,29 +88,6 @@ def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."
     for (m, l) in _inventory_db:
         yield m, l 
-
-
-def convert_to_ml(amount):
-    if("ml") in amount: #dont change anything 
-        amount = amount.strip('ml') #strips characters
-        amount = amount.strip() #strip whitespace
-        final = float(amount)
-    elif("oz") in amount:
-        amount = amount.strip('oz') #strips characters
-        amount = amount.strip()#strip whitespace
-        final = (float(amount)*29.5735)
-    elif("gallon") in amount:
-        amount = amount.strip('gallon') #strips characters
-        amount = amount.strip() #strip whitespace
-        final = (float(amount)*3785.41)
-    elif("liter") in amount:
-        amount = amount.strip('liter') #strips characters
-        amount = amount.strip() #strip whitespace
-        final = (float(amount)*1000)
-    else:
-        assert 0, amount
-
-    return final 
 
 
 

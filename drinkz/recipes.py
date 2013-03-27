@@ -1,4 +1,6 @@
-from . import db
+import db
+import convert
+
 class Recipe():
     def __init__(self,recipename,ingridients):
         # The constructor for Recipe should take a name (a string) and a list of ingredient 2-tuples, (liquor type, amount).
@@ -11,7 +13,7 @@ class Recipe():
 	 volume = 0 
          missing = []
 	 for type, quantity in self.singridients:
-      		needed = db.convert_to_ml(quantity)
+      		needed = convert.convert_to_ml(quantity)
 	 	available = db.check_inventory_for_type(type)
         	for (m,l) in available:
 			vol = db.get_liquor_amount(m,l)
