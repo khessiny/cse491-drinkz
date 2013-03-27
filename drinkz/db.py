@@ -29,17 +29,17 @@ def _reset_db():
 def save_db(filename):
     fp = open(filename, 'wb')
 
-    tosave = (_bottle_types_db, _inventory_db)
+    tosave = (_bottle_types_db, _inventory_db, _recipe_db)
     dump(tosave, fp)
 
     fp.close()
 
 def load_db(filename):
-    global _bottle_types_db, _inventory_db
+    global _bottle_types_db, _inventory_db, _recipe_db
     fp = open(filename, 'rb')
 
     loaded = load(fp)
-    (_bottle_types_db, _inventory_db) = loaded
+    (_bottle_types_db, _inventory_db, _recipe_db) = loaded
 
     fp.close()
 
@@ -135,7 +135,9 @@ def get_all_recipes():
 def check_inventory_for_type(types):
     listtypes=[]
     for (m, l, t) in _bottle_types_db:
- 	 print m, l, t
          if types == t:
          	listtypes.append((m,l))
     return listtypes
+
+def get_all_recipenames():
+	return _recipe_db.keys()
