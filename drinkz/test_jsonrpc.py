@@ -18,7 +18,7 @@ def test_rpc_convert():
         result = rpc_request['result']
 	print result
 	resultt = convert.convert_to_ml("25gallon")
-	print resultt
+	resultt = str(resultt) + " ml"
 	assert result == resultt
 
 

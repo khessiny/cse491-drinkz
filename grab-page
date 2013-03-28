@@ -1,20 +1,21 @@
 import sys
-from bin import _mypath
 import socket
 
 def main(args):
+	   if len(args) != 3:
+		print "Please add host and port"
+        	exit(0)
 	   hostname = args[1]
-	   port = args[2]
-	   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-	   s.connect((str(hostname), int(port))
-	   s.send("GET / HTTP/1.0\r\n\r\n")
+	   port = int(args[2])
+	   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	   s.connect((hostname, port))
+	   s.send("GET / HTTP/1.1\r\n\r\n")
 	   while 1:
-	       buf = s.recv(1000)
-	       if not buf:
-	       		break
-	       sys.stdout.write(buf)
-
-	       s.close()
+		buf = s.recv(1000)
+		if not buf:
+			break
+		sys.stdout.write(buf)
+	   s.close()
 
 if __name__ == '__main__':
 	   main(sys.argv)

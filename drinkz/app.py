@@ -414,7 +414,7 @@ class SimpleApp(object):
         return int(a) + int(b)
     
     def rpc_convert_units_to_ml(self,amount):
-	return convert.convert_to_ml(amount) 	
+	return str(convert.convert_to_ml(amount))+" ml" 	
 
     def rpc_get_recipe_names(self):
         return db.get_all_recipenames()
