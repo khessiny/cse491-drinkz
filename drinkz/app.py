@@ -6,18 +6,24 @@ import convert
 import db      #Import database
 import recipes #Import recipe class
 import os
+import jinja2
+import sys
+loader = jinja2.FileSystemLoader('./templates')
+env = jinja2.Environment(loader=loader)
 
 dispatch = {
     '/' : 'index',
-    '/content' : 'somefile',
     '/error' : 'error',
-    '/helmet' : 'helmet',
     '/form' : 'form',
     '/recv' : 'recv',
     '/recipes' : 'recipes',  
     '/inventory' : 'inventory',
     '/liquort' : 'liquort',
-    '/rpc'  : 'dispatch_rpc'
+    '/rpc'  : 'dispatch_rpc',
+    '/add'  : 'addstuff',
+    '/addinv' : 'addinv',
+    '/addbottletype' : 'addbottletype',
+    '/addrecipe' : 'addrecipe'
 }
 
 html_headers = [('Content-type', 'text/html')]
@@ -39,136 +45,39 @@ class SimpleApp(object):
         return fn(environ, start_response)
 
     def index(self, environ, start_response):
-	data = """\
-<html> 
-    <head> 
-    <title>CSE491Drinkz - Main</title> 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.css" />
-        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-        <script src="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.js"> </script>
-	 <script>
-		function javatest()
-		{
-			alert("I'm a drinkers dream site!");
-		}
-	</script>
-	<style>
-	.ui-header .ui-title {color:red;}
-	</style>
-</head> 
-<body> 
-    <!-- Start page -->
-    <div data-role="page" id="index" >
-
-        <div data-role="header" data-id="header" data-position="fixed">
-            <h1>CSE491Drinkz - Main</h1>
-            <div data-role="navbar">
-                <ul>
-                    <li><a href="/" data-icon="home" data-iconpos="top" >Index</a></li>
-                    <li><a href="/recipes" data-icon="arrow-l" data-iconpos="top"  >Recipes</a></li>
-			<li><a href="/inventory" data-icon="arrow-r" data-iconpos="top" >Inventory</a></li>
-                    <li><a href="/liquort" data-icon="arrow-u" data-iconpos="top"  >Liquor Types</a></li>
-                    <li><a href="/form" data-icon="gear" data-iconpos="top" >Convert</a></li>
-                </ul>            </div><!-- /navbar -->
-        </div><!-- /header -->
-
-        <div data-role="content">
-		<div align="center">
-		<img src="http://www2.chemistry.msu.edu/courses/cem352/SS2013_Jackson/MichiganState.jpg" >
-		</div>
-		<input type="button" onclick="javatest()" value="What is this site for?">
-              </div><!-- /content -->
-	<div data-role="footer" data-id="footer" data-position="fixed"><h1>CSE491-Drinkz</div>
-    </div><!-- /page -->
-
-</body>
-</html>
-"""
+	template = env.get_template("index.html")
+	data = template.render()
         start_response('200 OK', list(html_headers))
-        return [data]
+        return [str(data)]
         
-    def somefile(self, environ, start_response):
-        content_type = 'text/html'
-        data = open('somefile.html').read()
-
-        start_response('200 OK', list(html_headers))
-        return [data]
 
     def recipes(self, environ, start_response):
-	addin = """\
-<ul id="mylist" data-role="listview"  data-inset="false" >
-<li><div class="ui-grid-a">
-<div class="ui-block-a" style="width:50%">Recipe Names</div>
-<div class="ui-block-b" style="width:50%">Are all ingridients available?</div></div></li>
-"""
 	allrecipes = db.get_all_recipes()
+	canmake = ""
+	addin=""
 	for recipe in allrecipes:
 		if(recipe.need_ingredients() == []):
 			lacking = "Yes, drink!"
+			canmake = canmake + " " + str(recipe.recipename) 
 		else:
 			lacking = "Needs more:"
 			temp = recipe.need_ingredients()
 			lacking += str(temp[0]) + " " 
 
 		addin += "<li><div class=\"ui-grid-a\"><div class=\"ui-block-a\" style=\"width:50%\">" + recipe.recipename + "</div><div class=\"ui-block-b\" style=\"width:50%\">" + lacking + "</div></div></li>"
-	
-
-	addin+="</ul>"
-
-	
-        content_type = 'text/html'
-        data = """\
-<html> 
-    <head> 
-    <title>CSE491Drinkz - Recipes</title> 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.css" />
-        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-        <script src="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.js"> </script>
-</head> 
-<body> 
-    <!-- Start page -->
-    <div data-role="page" id="convert" >
-
-        <div data-role="header" data-id="header" data-position="fixed">
-            <h1>CSE491Drinkz - Recipes</h1>
-            <div data-role="navbar">
-                <ul>
-                    <li><a href="/" data-icon="home" data-iconpos="top" >Index</a></li>
-                    <li><a href="/recipes" data-icon="arrow-l" data-iconpos="top"  >Recipes</a></li>
-			<li><a href="/inventory" data-icon="arrow-r" data-iconpos="top" >Inventory</a></li>
-                    <li><a href="/liquort" data-icon="arrow-u" data-iconpos="top"  >Liquor Types</a></li>
-                    <li><a href="/form" data-icon="gear" data-iconpos="top" >Convert</a></li>
-                </ul>            </div><!-- /navbar -->
-        </div><!-- /header -->
-
-        <div data-role="content">
-"""
-        data += addin
-	data +="""\
-</div><!-- /content -->
-	<div data-role="footer" data-id="footer" data-position="fixed"><h1>CSE491-Drinkz</div>
-    </div><!-- /page -->
-
-</body>
-</html>
-"""
 
 
+	vars = dict(recipess=addin, canmakee = canmake)
+	template = env.get_template("recipes.html")
+	data = template.render(vars)
+	content_type = 'text/html'
         start_response('200 OK', list(html_headers))
-        return [data]
+        return [str(data)]
 
 
     def inventory(self, environ, start_response):
-        addin = """\
-<ul id="mylist" data-role="listview"  data-inset="false" >
-<li><div class="ui-grid-b">
-<div class="ui-block-a" style="width:50%">Manufacturer</div>
-<div class="ui-block-b" style="width:25%">Liquor</div>
-<div class="ui-block-c" style="width:25%">Liquor</div></div></li>
-"""	
 	tlist = set()
+	addin=""
 	for mfg, liquor in db.get_liquor_inventory():  #for every item returned 
     		if (mfg,liquor) in tlist:  #check if in posted list  or go on
 			continue
@@ -179,124 +88,31 @@ class SimpleApp(object):
 
 		addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + mfg + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + liquor + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + newquant + " (ml)</div></div></li>"
 	
-
-	addin+="</ul>"
-
-        content_type = 'text/html'
-        data = """\
-<html> 
-    <head> 
-    <title>CSE491Drinkz - Inventory</title> 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.css" />
-        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-        <script src="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.js"> </script>
-</head> 
-<body> 
-    <!-- Start page -->
-    <div data-role="page" id="convert" >
-
-        <div data-role="header" data-id="header" data-position="fixed">
-            <h1>CSE491Drinkz - Inventory</h1>
-            <div data-role="navbar">
-                <ul>
-                    <li><a href="/" data-icon="home" data-iconpos="top" >Index</a></li>
-                    <li><a href="/recipes" data-icon="arrow-l" data-iconpos="top"  >Recipes</a></li>
-			<li><a href="/inventory" data-icon="arrow-r" data-iconpos="top" >Inventory</a></li>
-                    <li><a href="/liquort" data-icon="arrow-u" data-iconpos="top"  >Liquor Types</a></li>
-                    <li><a href="/form" data-icon="gear" data-iconpos="top" >Convert</a></li>
-                </ul>            </div><!-- /navbar -->
-        </div><!-- /header -->
-
-        <div data-role="content">
-"""
-	data += addin
-	data +="""\
-</div><!-- /content -->
-	<div data-role="footer" data-id="footer" data-position="fixed"><h1>CSE491-Drinkz</div>
-    </div><!-- /page -->
-
-</body>
-</html>
-"""
-
-
+        vars = dict(inventory=addin)
+	template = env.get_template("inventory.html")
+	data = template.render(vars)
+	content_type = 'text/html'
         start_response('200 OK', list(html_headers))
-        return [data]
+        return [str(data)]
 
     def liquort(self, environ, start_response):
-        addin = """\
-<ul id="mylist" data-role="listview"  data-inset="false" >
-<li><div class="ui-grid-a">
-<div class="ui-block-a" style="width:50%">Manufacturer</div>
-<div class="ui-block-b" style="width:50%">Liquor</div></div></li>
-"""
-	for mfg, liquor in db.get_liquor_inventory():
-		addin += "<li><div class=\"ui-grid-a\"><div class=\"ui-block-a\" style=\"width:50%\">" + mfg + "</div><div class=\"ui-block-b\" style=\"width:50%\">" + liquor + "</div></div></li>"
+	addin=""
+	for item in db.get_bottle_types():
+		addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + item[0] + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + item[1] + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + item[2] + "</div></li>"
 	
-
-	addin+="</ul>"
-
-        content_type = 'text/html'
-        data = """\
-<html> 
-    <head> 
-    <title>CSE491Drinkz - Liquor Types</title> 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.css" />
-        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-        <script src="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.js"> </script>
-</head> 
-<body> 
-    <!-- Start page -->
-    <div data-role="page" id="convert" >
-
-        <div data-role="header" data-id="header" data-position="fixed">
-            <h1>CSE491Drinkz - Liquor Types</h1>
-            <div data-role="navbar">
-                <ul>
-                    <li><a href="/" data-icon="home" data-iconpos="top" >Index</a></li>
-                    <li><a href="/recipes" data-icon="arrow-l" data-iconpos="top"  >Recipes</a></li>
-			<li><a href="/inventory" data-icon="arrow-r" data-iconpos="top" >Inventory</a></li>
-                    <li><a href="/liquort" data-icon="arrow-u" data-iconpos="top"  >Liquor Types</a></li>
-                    <li><a href="/form" data-icon="gear" data-iconpos="top" >Convert</a></li>
-                </ul>            </div><!-- /navbar -->
-        </div><!-- /header -->
-
-        <div data-role="content">
-"""
-	data += addin
-	data +="""\
-</div><!-- /content -->
-	<div data-role="footer" data-id="footer" data-position="fixed"><h1>CSE491-Drinkz</div>
-    </div><!-- /page -->
-
-</body>
-</html>
-"""
-
+	vars = dict(liquort=addin)
+	template = env.get_template("liquortypes.html")
+	data = template.render(vars)
+	content_type = 'text/html'
         start_response('200 OK', list(html_headers))
-        return [data]
+        return [str(data)]
 
 
     def error(self, environ, start_response):
         status = "404 Not Found"
         content_type = 'text/html'
-        data = "Couldn't find your stuff."
+        data = "<p>Couldn't find your stuff.</p>"
        
-        start_response('200 OK', list(html_headers))
-        return [data]
-
-    def helmet(self, environ, start_response):
-        content_type = 'image/gif'
-        data = open('Spartan-helmet-Black-150-pxls.gif', 'rb').read()
-
-        start_response('200 OK', [('Content-type', content_type)])
-        return [data]
-
-    def form(self, environ, start_response):
-        data = form()
-
         start_response('200 OK', list(html_headers))
         return [data]
    
@@ -321,52 +137,13 @@ class SimpleApp(object):
 			<p>Possible inputs: 25ml 30 gallon  4 liter  9oz<p>
 		</div>
 """
-	
-
-	
-	
-        content_type = 'text/html'
-	data = """\
-<html> 
-    <head> 
-    <title>CSE491Drinkz - Results</title> 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.css" />
-        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-        <script src="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.js"> </script>
-</head> 
-<body> 
-    <!-- Start page -->
-    <div data-role="page" id="convert" >
-
-        <div data-role="header" data-id="header" data-position="fixed">
-            <h1>CSE491Drinkz - Results</h1>
-            <div data-role="navbar">
-                <ul>
-                    <li><a href="/" data-icon="home" data-iconpos="top" >Index</a></li>
-                    <li><a href="/recipes" data-icon="arrow-l" data-iconpos="top"  >Recipes</a></li>
-			<li><a href="/inventory" data-icon="arrow-r" data-iconpos="top" >Inventory</a></li>
-                    <li><a href="/liquort" data-icon="arrow-u" data-iconpos="top"  >Liquor Types</a></li>
-                    <li><a href="/form" data-icon="gear" data-iconpos="top" >Convert</a></li>
-                </ul>            </div><!-- /navbar -->
-        </div><!-- /header -->
-
-        <div data-role="content">
-"""
-	data += addin
-	data +="""\
-</div><!-- /content -->
-	<div data-role="footer" data-id="footer" data-position="fixed"><h1>CSE491-Drinkz</div>
-    </div><!-- /page -->
-
-</body>
-</html>
-"""
-
-
-
+	vars = dict(convert=addin)
+	template = env.get_template("convert.html")
+	data = template.render(vars)
+	content_type = 'text/html'
         start_response('200 OK', list(html_headers))
-        return [data]
+        return [str(data)]
+
 
     def dispatch_rpc(self, environ, start_response):
         # POST requests deliver input data via a file-like handle,
@@ -412,7 +189,68 @@ class SimpleApp(object):
 
     def rpc_add(self, a, b):
         return int(a) + int(b)
-    
+
+    def rpc_addrecipe(self,name,ingridients):
+	try:
+		name = name.strip()
+		ing = ingridients.strip()
+		templist = ing.split(',')
+		sendoff = []
+		counter = 0
+		while counter< len(templist):
+			temp1 = templist[counter].strip()
+			temp2 = templist[counter+1].strip()
+			finalamount = str(convert.convert_to_ml(temp2))
+			finalamount = finalamount + "ml"
+			print temp1,finalamount
+			sendoff.append((temp1,finalamount))
+			counter = counter + 2
+		r = recipes.Recipe(name, sendoff)
+		try:
+			db.add_recipe(r)
+			addin= "Succesfully Added."
+
+		except db.DuplicateRecipeName:
+			addin= "There is already a recipe by this name."
+	
+	except (AssertionError, KeyError, IndexError) :
+		addin = "Incorrect format or incomplete. Please try again."
+
+	return addin
+
+    def rpc_addinventory(self,mfg,liquor,amount):
+	try:
+		mfg = mfg.strip()
+		liquor = liquor.strip()
+		amount = amount.strip()
+	    	print mfg,liquor,amount
+		try:
+			db.add_to_inventory(mfg,liquor,amount)
+	 		addin = "Succesfully added."
+		except db.LiquorMissing:
+			addin= " You must first add this bottle type " +mfg + " " + liquor + " ."
+	except (AssertionError, KeyError, IndexError) :
+		addin = """\
+		 Incorrect amount format or incomplete. Please try again.
+	"""
+        return addin
+
+    def rpc_addtype(self,mfg,liquor,type):
+	try:
+		type = type.strip()
+		mfg = mfg.strip()
+		liquor = liquor.strip()
+		if not db._check_bottle_type_exists(mfg, liquor):
+			db.add_bottle_type(mfg,liquor,type)
+	 		addin = "Succesfully added."
+		else:
+			addin= " This bottle type already exists."
+	except (AssertionError, KeyError, IndexError) :
+		addin = """\
+		 Incorrect format or incomplete. Please try again.
+	"""
+	return addin
+
     def rpc_convert_units_to_ml(self,amount):
 	return str(convert.convert_to_ml(amount))+" ml" 	
 
@@ -424,52 +262,119 @@ class SimpleApp(object):
 	for mfg, liquor in db.get_liquor_inventory():
 		list.append((mfg,liquor))
 	return list
-def form():
-	return """\
-<html> 
-    <head> 
-    <title>CSE491Drinkz - Convert</title> 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.css" />
-        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-        <script src="http://code.jquery.com/mobile/1.3.0/jquery.mobile-1.3.0.min.js"> </script>
-</head> 
-<body> 
-    <!-- Start page -->
-    <div data-role="page" id="form" >
-
-        <div data-role="header" data-id="header" data-position="fixed">
-            <h1>CSE491Drinkz - Convert</h1>
-            <div data-role="navbar">
-                <ul>
-                    <li><a href="/" data-icon="home" data-iconpos="top" >Index</a></li>
-                    <li><a href="/recipes" data-icon="arrow-l" data-iconpos="top"  >Recipes</a></li>
-			<li><a href="/inventory" data-icon="arrow-r" data-iconpos="top" >Inventory</a></li>
-                    <li><a href="/liquort" data-icon="arrow-u" data-iconpos="top"  >Liquor Types</a></li>
-                    <li><a href="/form" data-icon="gear" data-iconpos="top" >Convert</a></li>
-                </ul>
-            </div><!-- /navbar -->
-        </div><!-- /header -->
-
-        <div data-role="content">
+    def form(self, environ, start_response):
+	dataa = """\
 	<form action='recv'>
 		Please enter amount to convert to ml: <input type='text' name='amount' size'20'>
 		<input type='submit' value="Convert">
 	</form>
 		<a href="#popupBasic" data-role="button" data-rel="popup">How to use?</a>
 		<div data-role="popup" id="popupBasic">
-			<p>Possible inputs: 25ml 30 gallon  4 liter  9oz<p>
-		</div>
-              </div><!-- /content -->
-		
-	<div data-role="footer" data-id="footer" data-position="fixed"><h1>CSE491-Drinkz</div>
-    </div><!-- /page -->
-	<div data-role="page" id="form" >
-		<p> Please enter like this:</p>
-	</div>
+			<p>Possible inputs: 25ml 30 gallon  4 liter  9oz</p>
+		</div>		
 
-
-</body>
-</html>
 """
+	vars = dict(convert=dataa)
+	template = env.get_template("convert.html")
+	data = template.render(vars)
+	content_type = 'text/html'
+        start_response('200 OK', list(html_headers))
+        return [str(data)]
 
+
+    def addinv(self, environ, start_response):
+	formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+	try:
+        	mfg = results['mfg'][0]
+		liquor = results['liquor'][0]
+		amount = results['amount'][0]
+		mfg = mfg.strip()
+		liquor = liquor.strip()
+		amount = amount.strip()
+	    	print mfg,liquor,amount
+		try:
+			db.add_to_inventory(mfg,liquor,amount)
+	 		addin = "<p>Succesfully added.</p>"
+		except db.LiquorMissing:
+			addin= "<p> You must first add this bottle type " +mfg + " " + liquor + " .</p>"
+	except (AssertionError, KeyError, IndexError) :
+		addin = """\
+		<p> Incorrect amount format or incomplete. Please try again.</p>
+	"""
+	vars = dict(form=addin)
+	template = env.get_template("add.html")
+	data = template.render(vars)
+	content_type = 'text/html'
+        start_response('200 OK', list(html_headers))
+        return [str(data)]
+
+
+
+
+    def addbottletype(self, environ, start_response):
+    	formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+	try:
+        	mfg = results['mfg'][0]
+		liquor = results['liquor'][0]
+		type = results['type'][0]
+		type = type.strip()
+		mfg = mfg.strip()
+		liquor = liquor.strip()
+		if not db._check_bottle_type_exists(mfg, liquor):
+			db.add_bottle_type(mfg,liquor,type)
+	 		addin = "<p>Succesfully added.</p>"
+		else:
+			addin= "<p> This bottle type already exists.</p>"
+	except (AssertionError, KeyError, IndexError) :
+		addin = """\
+		<p> Incorrect format or incomplete. Please try again.</p>
+	"""
+	vars = dict(form=addin)
+	template = env.get_template("add.html")
+	data = template.render(vars)
+	content_type = 'text/html'
+        start_response('200 OK', list(html_headers))
+        return [str(data)]
+
+    def addrecipe(self, environ, start_response):
+    	formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+	try:
+        	name = results['name'][0]
+		ing = results['ing'][0]
+		name = name.strip()
+		ing = ing.strip()
+		templist = ing.split(',')
+		sendoff = []
+		counter = 0
+		while counter< len(templist):
+			temp1 = templist[counter].strip()
+			temp2 = templist[counter+1].strip()
+			finalamount = str(convert.convert_to_ml(temp2))
+			finalamount = finalamount + "ml"
+			print temp1,finalamount
+			sendoff.append((temp1,finalamount))
+			counter = counter + 2
+		r = recipes.Recipe(name, sendoff)
+		try:
+			db.add_recipe(r)
+			addin= "<p>Succesfully Added.</p>"
+
+		except db.DuplicateRecipeName:
+			addin= "<p>There is already a recipe by this name.</p>"
+	
+	except (AssertionError, KeyError, IndexError) :
+		addin = """\
+		<p> Incorrect format or incomplete. Please try again.</p>
+	"""
+	vars = dict(form=addin)
+	template = env.get_template("add.html")
+	data = template.render(vars)
+	content_type = 'text/html'
+        start_response('200 OK', list(html_headers))
+        return [str(data)]
+
+def load_db(file_name):
+	    db.load_db(file_name)

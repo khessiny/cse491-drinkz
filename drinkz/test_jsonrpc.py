@@ -10,6 +10,76 @@ import sys
 import StringIO
 from drinkz import convert
 
+
+def test_rpc_addrecipe_1():
+	db._reset_db()
+	text = call_remote(jsonrpc='1.0', method='addrecipe', params = ["gotdrunk", "Black Label,1234 ml, tommy, 5 gallon"], id='1')
+	rpc_request = simplejson.loads(text)
+	#print rpc_request
+        result = rpc_request['result']
+	print result
+	assert "gotdrunk" in db.get_all_recipenames()
+	testing = "Succesfully Added."
+	assert result == testing
+
+def test_rpc_addrecipe_2():
+	#should fail, incorrect formatting
+	db._reset_db()
+	text = call_remote(jsonrpc='1.0', method='addrecipe', params = ["gotdrunk", "Black Label,1234 ml, tommy, 5 gallon,"], id='1')
+	rpc_request = simplejson.loads(text)
+	#print rpc_request
+        result = rpc_request['result']
+	print result
+	assert "gotdrunk" not in db.get_all_recipenames()
+	testing = "Incorrect format or incomplete. Please try again."
+	assert result == testing
+
+
+def test_rpc_addinventory_1():
+	text = call_remote(jsonrpc='1.0', method='addinventory', params = ["Greyer", "goose", "25 gallon"], id='1')
+	db._reset_db()
+	rpc_request = simplejson.loads(text)
+	#print rpc_request
+        result = rpc_request['result']
+	print result
+	assert "You must first add this bottle" in result
+
+def test_rpc_addinventory_2():
+	db._reset_db()
+	db.add_bottle_type('Johnnie Walker', 'black label', 'blended scotch')
+	text = call_remote(jsonrpc='1.0', method='addinventory', params = ["Johnnie Walker", "black label", "25 gallon"], id='1')
+	
+	
+
+	rpc_request = simplejson.loads(text)
+	#print rpc_request
+        result = rpc_request['result']
+	print result
+	check = db.check_inventory("Johnnie Walker", "black label")
+	assert "Succesfully added." in result
+	assert check 
+
+def test_rpc_addtype_1():
+	db._reset_db()
+	text = call_remote(jsonrpc='1.0', method='addtype', params = ["Johnnie Walker", "black label", "scotch"], id='1')
+	
+	rpc_request = simplejson.loads(text)
+        result = rpc_request['result']
+	print result
+	check = db._check_bottle_type_exists("Johnnie Walker", "black label")
+	assert "Succesfully added." in result
+	assert check 
+
+def test_rpc_addtype_2():
+	db._reset_db()
+	db.add_bottle_type('Johnnie Walker', 'black label', 'blended scotch')
+	text = call_remote(jsonrpc='1.0', method='addtype', params = ["Johnnie Walker", "black label", "blended scotch"], id='1')
+	
+	rpc_request = simplejson.loads(text)
+        result = rpc_request['result']
+	print result
+	assert "This bottle type already exists." in result
+
 def test_rpc_convert():
 	
 	text = call_remote(jsonrpc='1.0', method='convert_units_to_ml', params = ["25gallon"], id='1')

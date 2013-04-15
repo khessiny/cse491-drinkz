@@ -159,3 +159,53 @@ def test_get_liquor_inventory():
         x.append((mfg, liquor))
 
     assert x == [('Johnnie Walker', 'Black Label')], x
+
+def test_script_load_recipes_1():
+    scriptpath = 'bin/load-recipes'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([scriptpath, 'test-data/recipes_test.txt'])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+    
+def test_bulk_loading_recipes_1():
+    db._reset_db()
+
+    data = "testing,Black Label,1234 ml, tommy, 5 gallon"
+    fp = StringIO(data)                 # make this look like a file handle
+    n = load_bulk_data.load_recipes(fp)
+    print db.get_all_recipenames()
+    assert "testing" in db.get_all_recipenames()
+    assert n == 1, n
+
+def test_bulk_loading_recipes_2():
+	#should fail on incorrect amount
+    db._reset_db()
+
+    data = "testing,Black Label,1234 ml, tommy, 5 gallon"
+    fp = StringIO(data)                 # make this look like a file handle
+    n = load_bulk_data.load_recipes(fp)
+    print db.get_all_recipenames()
+    assert "testing" in db.get_all_recipenames()
+    assert n == 1, n
+
+def test_bulk_loading_recipes_3():
+	#should fail on incorrect formatting
+    db._reset_db()
+
+    data = "testing,Black Label,1234 ml, tommy, 5 gallon,5,5"
+    fp = StringIO(data)                 # make this look like a file handle
+    n = load_bulk_data.load_recipes(fp)
+    print db.get_all_recipenames()
+    assert "testing" not in db.get_all_recipenames()
+    assert n == 0, n
+
+def test_bulk_loading_recipes_3():
+	#should fail on incorrect extra comma
+    db._reset_db()
+
+    data = "testing,Black Label,1234 ml, tommy, 5 gallon,"
+    fp = StringIO(data)                 # make this look like a file handle
+    n = load_bulk_data.load_recipes(fp)
+    print db.get_all_recipenames()
+    assert "testing" not in db.get_all_recipenames()
+    assert n == 0, n

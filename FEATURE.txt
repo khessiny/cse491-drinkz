@@ -1,0 +1,23 @@
+Use Case:
+Timmy is going to a party, and is unsure about what he wants to drink. He can check the recipe rating and pick one out.
+
+A feature I would like to implement is having ratings for recipes. It would allow people to pick a recipe based on preferences of others if they are unsure about what to drink. 
+Data component: storing a rating for each recipe
+Internal Api: adding functionality in database to each recipe
+Web interface: form to submit a rating
+JSON-RPC: submit a rating to a drink
+
+
+
+
+Use Case:
+Several friends want to drink a particular recipe for a party they are going to. They input what kind of recipe they want and the number of people drinking it. They then find out the cost for each one of them based on missing ingridients.
+
+
+Another feauture I would like to implement is displaying how many of each recipe we can make if there is more than one. Also, we could allow a form to input number of that recipe to make and how much more of each liquor we need to buy.
+Another cool thing would be to be able to input the number of people drinking that recipe and figure out the amount of bottles/cost for each person drinking. 
+
+Data component: cost for each ingrident(750ml bottle incrments)
+Internal Api: storing cost of each liquor in inventory
+Web interface: form to input number of drinkers
+JSON-RPC: same as web interface

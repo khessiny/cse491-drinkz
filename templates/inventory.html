@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul id="mylist" data-role="listview"  data-inset="false" >
+<li><div class="ui-grid-b">
+<div class="ui-block-a" style="width:50%">Manufacturer</div>
+<div class="ui-block-b" style="width:25%">Liquor</div>
+<div class="ui-block-c" style="width:25%">Amount</div></div></li>
+{{inventory}}
+</ul>
+<div data-role="header" data-inset="false" style=" margin-top:25px;" data-id="header"><h2>Add Inventory:</h2></div>
+	<form action='addinv'>
+		Manufacturer: <input type='text' name='mfg' size'20'>
+		Liquor: <input type='text' name='liquor' size'20'>
+		Amount: <input type='text' name='amount' size'20'>
+		<input type='submit' value="Add to Inventory">
+	</form>
+<a href="#popupBasic" data-role="button" data-rel="popup">How to use?</a>
+		<div data-role="popup" id="popupBasic">
+			<p>Please enter amounts in one of these formats:25ml 30 gallon  4 liter  9oz.</p>
+		</div>		
+
+{% endblock %}

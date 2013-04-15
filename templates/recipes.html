@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p>You can make these recipes:{{canmakee}}</p>
+<ul id="mylist" data-role="listview"  data-inset="false" >
+<li><div class="ui-grid-a">
+<div class="ui-block-a" style="width:50%">Recipe Name</div>
+<div class="ui-block-b" style="width:50%">Are all ingridients available?</div></div></li>
+{{recipess}}
+</ul>
+<div data-role="header" style=" margin-top:25px;" data-id="header"><h4>Add Recipes:</h4></div>
+	<a href="#popupBasic" data-role="button" data-rel="popup">How to use?</a>
+		<div data-role="popup" id="popupBasic">
+			<p>Please enter ingridients in this format: ingridient name, amount, ingridient name, amount </p>
+			<p>Amounts can be : 25ml 30 gallon  4 liter  9oz.
+		</div>		
+	<form action='addrecipe'>
+		Name: <input type='text' name='name' size'20'>
+		Ingridients: <input type='text' name='ing' size'20'>
+		<input type='submit' value="Add Recipe">
+	</form>
+{% endblock %}

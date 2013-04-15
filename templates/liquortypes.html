@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul id="mylist" data-role="listview"  data-inset="false" >
+<li><div class="ui-grid-b">
+<div class="ui-block-a" style="width:50%">Manufacturer</div>
+<div class="ui-block-b" style="width:25%">Liquor</div>
+<div class="ui-block-c" style="width:25%">Type</div></div></li>
+
+{{liquort}}
+</ul>
+<div data-role="header" style=" margin-top:25px;" data-id="header"><h3>Add Liquor Types:</h3></div>
+	<form action='addbottletype'>
+		Manufacturer: <input type='text' name='mfg' size'20'>
+		Liquor: <input type='text' name='liquor' size'20'>
+		Type: <input type='text' name='type' size'20'>
+		<input type='submit' value="Add Bottle Type">
+	</form>
+{% endblock %}

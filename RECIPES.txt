@@ -1,0 +1,6 @@
+Loaded same way as other bulk loading functions. 
+
+Format: name, drink, amount, drink, amount
+
+to run:
+python bin/load-recipes test-data/recipes_test.txt

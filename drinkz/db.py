@@ -48,7 +48,9 @@ def load_db(filename):
 class LiquorMissing(Exception):
     pass
 
-
+def get_bottle_types():
+    return list(_bottle_types_db)
+	
 
 def add_bottle_type(mfg, liquor, typ):
     "Add the given bottle type into the drinkz database."
