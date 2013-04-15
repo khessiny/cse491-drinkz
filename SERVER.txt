@@ -1,0 +1,6 @@
+Simple server.
+loads the default database file.
+
+to run:
+
+python bin/server
