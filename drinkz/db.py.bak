@@ -27,26 +27,12 @@ def _reset_db():
     _recipe_db= dict()
 
 def save_db(filename):
-    try:
-		os.unlink(filename)
-	except OSError:
-		pass
-	db = sqlite3.connect(filename)
-	with db:
-		cur = db.cursor()
-		cur.execute("CREATE TABLE BottleTypes(mfg STRING, liquor STRING, typ STRING)")
-		cur.execute("CREATE TABLE Inventory(mfg STRING, liquor STRING, amount FLOAT)")
-		cur.execute("CREATE TABLE Recipes(name STRING)")
-		for (m, l) in _inventory_db:
-			mfg = m
-			liquor = l
-			amount = _inventory_db[(mfg, liquor)]
-			cur.execute("insert into Inventory values (?, ?, ?)", (mfg, liquor,amount))
-		for (m, l, typ) in _bottle_types_db:
-			cur.execute("insert into BottleTypes values (?, ?, ?)", (m,l,typ))
-		for (
-		db.commit()
-		db.close()
+    fp = open(filename, 'wb')
+
+    tosave = (_bottle_types_db, _inventory_db, _recipe_db)
+    dump(tosave, fp)
+
+    fp.close()
 
 def load_db(filename):
     global _bottle_types_db, _inventory_db, _recipe_db
@@ -54,7 +40,7 @@ def load_db(filename):
 
     loaded = load(fp)
     (_bottle_types_db, _inventory_db, _recipe_db) = loaded
-    print 
+
     fp.close()
 
 # exceptions in Python inherit from Exception and generally don't need to

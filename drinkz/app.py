@@ -264,14 +264,38 @@ class SimpleApp(object):
 	return list
     def form(self, environ, start_response):
 	dataa = """\
-	<form action='recv'>
-		Please enter amount to convert to ml: <input type='text' name='amount' size'20'>
-		<input type='submit' value="Convert">
-	</form>
+		Please enter amount to convert to ml: <input type='text' class="a" name='amount' size='20'>
+		Result: <input type='text' class='result' id='resulting' size='20'/>
+		
 		<a href="#popupBasic" data-role="button" data-rel="popup">How to use?</a>
 		<div data-role="popup" id="popupBasic">
 			<p>Possible inputs: 25ml 30 gallon  4 liter  9oz</p>
-		</div>		
+		</div>	
+		<p class='toupdate' />
+		<script type="text/javascript">	
+		function show_textbox(err)
+		{
+			$('#popupBasic').popup('open');
+		}
+		function update_result(input,output){
+		text = 'Converted '+ input + ' to ml =  ' + output ;
+   		$('input.result').val(text);
+		}
+		function do_convert() {
+		 a = $('input.a').val();
+		 $.ajax({
+    			url: '/rpc', 
+     			data: JSON.stringify ({method:'convert_units_to_ml', params:[a,], id:"0"} ),
+     			type: "POST",
+     			dataType: "json",
+     			success: function (data) { update_result(a, data.result) },
+     			error: function (err)  { show_textbox(err)}
+  		});
+		}
+		
+		$('input.a').change(do_convert);
+		$('#resulting').addClass('ui-disabled');
+		</script>
 
 """
 	vars = dict(convert=dataa)
