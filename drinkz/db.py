@@ -27,11 +27,11 @@ def _reset_db():
     _recipe_db= dict()
 
 def save_db(filename):
-    try:
+	try:
 		os.unlink(filename)
 	except OSError:
 		pass
-	db = sqlite3.connect(filename)
+		db = sqlite3.connect(filename)
 	with db:
 		cur = db.cursor()
 		cur.execute("CREATE TABLE BottleTypes(mfg STRING, liquor STRING, typ STRING)")
@@ -44,7 +44,6 @@ def save_db(filename):
 			cur.execute("insert into Inventory values (?, ?, ?)", (mfg, liquor,amount))
 		for (m, l, typ) in _bottle_types_db:
 			cur.execute("insert into BottleTypes values (?, ?, ?)", (m,l,typ))
-		for (
 		db.commit()
 		db.close()
 
