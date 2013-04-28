@@ -157,6 +157,7 @@ class SimpleApp(object):
                 body = environ['wsgi.input'].read(length)
                 response = self._dispatch(body) + '\n'
                 start_response('200 OK', [('Content-Type', 'application/json')])
+		print str(response)
                 return [response]
 
         # default to a non JSON-RPC error.

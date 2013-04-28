@@ -11,7 +11,10 @@ of the class and makes it easy to get the item and edit the item.
 
 """
 import convert
-
+import os 
+import sys
+import sqlite3, os
+import recipes
 from cPickle import dump, load
 
 # private singleton variables at module level
@@ -31,12 +34,12 @@ def save_db(filename):
 		os.unlink(filename)
 	except OSError:
 		pass
-		db = sqlite3.connect(filename)
+	db = sqlite3.connect(filename)
 	with db:
 		cur = db.cursor()
 		cur.execute("CREATE TABLE BottleTypes(mfg STRING, liquor STRING, typ STRING)")
 		cur.execute("CREATE TABLE Inventory(mfg STRING, liquor STRING, amount FLOAT)")
-		cur.execute("CREATE TABLE Recipes(name STRING)")
+		cur.execute("CREATE TABLE Recipes(name STRING, ing BUFFER)")
 		for (m, l) in _inventory_db:
 			mfg = m
 			liquor = l
@@ -44,17 +47,73 @@ def save_db(filename):
 			cur.execute("insert into Inventory values (?, ?, ?)", (mfg, liquor,amount))
 		for (m, l, typ) in _bottle_types_db:
 			cur.execute("insert into BottleTypes values (?, ?, ?)", (m,l,typ))
+		allrecipes = get_all_recipes()
+		for recipe in allrecipes:
+			name = recipe.recipename
+			templist = recipe.singridients
+			finallist = buffer(myListToStr(templist))
+			cur.execute("insert into Recipes values (?,?)",(name,finallist))
+		
 		db.commit()
-		db.close()
+		cur.close()
+		#db.close()
+#from stackoverflow
+def myListToStr(myList):
+    """This method takes a list of (int, str) tuples and converts them to a string"""
+
+    strList = ""
+    for item in myList:
+        name, amount = item #split the tuple
+
+        strList += "{}:{};".format(name, amount) #append the tuple in "num:name" format with a " " delimiter
+    return strList[:-1] #remove the final space (unneeded)
+
+def strToMyList(myStr):
+    """This method takes a string in the format "int:str int:str int:str..."
+    and converts it to a list of (str, str) tuples"""
+
+    myList = []
+    for tup in myStr.split(";"): #for each converted tuple
+        name, amount = tup.split(":") #split the tuple
+
+        myList.append((name, amount))
+
+    return myList
+
+
 
 def load_db(filename):
-    global _bottle_types_db, _inventory_db, _recipe_db
-    fp = open(filename, 'rb')
+	db = sqlite3.connect(filename)
+	with db:
+		cur = db.cursor()
+		cur.execute("SELECT * FROM BottleTypes")
+		rows = cur.fetchall()
+		for row in rows:
+			mfg,liquor,typ = row
+			_bottle_types_db.add((mfg, liquor, typ))
+		cur.execute("Select * FROM Inventory")
+		rows = cur.fetchall()
+		for row in rows:
+			mfg,liquor,amount = row
+			#print mfg
+			#print liquor
+			#print amount
+			_inventory_db[(mfg, liquor)]=amount
+		cur.execute("Select * FROM Recipes")
+		rows = cur.fetchall()
+		#print rows
+		for row in rows:
+			name,ing = row
+			#print name
+			#print str(ing)
+			my_list2 = strToMyList(str(ing))
+			r = recipes.Recipe(name,my_list2)
+			add_recipe(r)
+		#for k,v in _recipe_db.items():
+    			# k,v.singridients
+		db.commit()
+		cur.close()
 
-    loaded = load(fp)
-    (_bottle_types_db, _inventory_db, _recipe_db) = loaded
-    print 
-    fp.close()
 
 # exceptions in Python inherit from Exception and generally don't need to
 # override any methods.
