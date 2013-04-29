@@ -16,18 +16,21 @@ import sys
 import sqlite3, os
 import recipes
 from cPickle import dump, load
+import uuid
 
 # private singleton variables at module level
 _bottle_types_db = set([])
 _inventory_db = dict()
 _recipe_db=dict()
+_auth=set([])
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
-    global _bottle_types_db, _inventory_db, _recipe_db
+    global _bottle_types_db, _inventory_db, _recipe_db, _auth
     _bottle_types_db =set([])
     _inventory_db = dict()
     _recipe_db= dict()
+    _auth=set([])
 
 def save_db(filename):
 	try:
@@ -38,6 +41,7 @@ def save_db(filename):
 	with db:
 		cur = db.cursor()
 		cur.execute("CREATE TABLE BottleTypes(mfg STRING, liquor STRING, typ STRING)")
+		cur.execute("CREATE TABLE Auth(user STRING, pass STRING, email STRING)")
 		cur.execute("CREATE TABLE Inventory(mfg STRING, liquor STRING, amount FLOAT)")
 		cur.execute("CREATE TABLE Recipes(name STRING, ing BUFFER)")
 		for (m, l) in _inventory_db:
@@ -47,6 +51,8 @@ def save_db(filename):
 			cur.execute("insert into Inventory values (?, ?, ?)", (mfg, liquor,amount))
 		for (m, l, typ) in _bottle_types_db:
 			cur.execute("insert into BottleTypes values (?, ?, ?)", (m,l,typ))
+		for (u, p, e) in _auth:
+			cur.execute("insert into Auth values (?, ?, ?)", (u,p,e))
 		allrecipes = get_all_recipes()
 		for recipe in allrecipes:
 			name = recipe.recipename
@@ -91,6 +97,12 @@ def load_db(filename):
 		for row in rows:
 			mfg,liquor,typ = row
 			_bottle_types_db.add((mfg, liquor, typ))
+		cur.execute("SELECT * FROM Auth")
+		rows = cur.fetchall()
+		for row in rows:
+			mfg,liquor,typ = row
+			_auth.add((mfg, liquor, typ))
+
 		cur.execute("Select * FROM Inventory")
 		rows = cur.fetchall()
 		for row in rows:
@@ -120,13 +132,40 @@ def load_db(filename):
 class LiquorMissing(Exception):
     pass
 
+class UserExists(Exception):
+    pass
+
 def get_bottle_types():
     return list(_bottle_types_db)
 	
 
 def add_bottle_type(mfg, liquor, typ):
-    "Add the given bottle type into the drinkz database."
+    #"Add the given bottle type into the drinkz database."
     _bottle_types_db.add((mfg, liquor, typ))
+
+def add_user(user,passw,email):
+    if check_user(user):
+	err = "This username already exists, please use another one'%s'" % (user)
+	raise UserExists(err)
+    else:
+	_auth.add((user,passw,email))
+	return user
+    
+
+def verify_user(user,passw):
+   for (u, p, _) in _auth:
+        if user == u and passw == p:
+	     k = str(uuid.uuid4())
+             return k
+
+   return False
+
+def check_user(user):
+    for (u, _, _) in _auth:
+        if user == u:
+            return True
+
+    return False
 
 def _check_bottle_type_exists(mfg, liquor):
     for (m, l, _) in _bottle_types_db:

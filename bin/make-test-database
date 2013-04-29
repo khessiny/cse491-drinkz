@@ -20,7 +20,7 @@ def main(args):
 
 	db.add_bottle_type('Rossi', 'extra dry vermouth', 'vermouth')
 	db.add_to_inventory('Rossi', 'extra dry vermouth', '24 oz')
-
+	db.add_user('test','test','test@test.com')
 	r = recipes.Recipe('scotch on the rocks', [('blended scotch','4 oz')])
 	db.add_recipe(r)
 	r = recipes.Recipe('vodka martini', [('unflavored vodka', '6 oz'),('vermouth', '1.5 oz')])

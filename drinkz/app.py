@@ -10,9 +10,16 @@ import jinja2
 import sys
 loader = jinja2.FileSystemLoader('./templates')
 env = jinja2.Environment(loader=loader)
+import uuid
+from Cookie import SimpleCookie
 
 dispatch = {
-    '/' : 'index',
+    '/' : 'login',
+    '/logem' : 'logem',
+    '/login' : 'login',
+    '/logout' : 'logout',
+    '/register' : 'register',
+    '/index' : 'index',
     '/error' : 'error',
     '/form' : 'form',
     '/recv' : 'recv',
@@ -25,9 +32,8 @@ dispatch = {
     '/addbottletype' : 'addbottletype',
     '/addrecipe' : 'addrecipe'
 }
-
 html_headers = [('Content-type', 'text/html')]
-
+usernames = {}
 class SimpleApp(object):
     def __call__(self, environ, start_response):
         path = environ['PATH_INFO']
@@ -45,68 +51,116 @@ class SimpleApp(object):
         return fn(environ, start_response)
 
     def index(self, environ, start_response):
-	template = env.get_template("index.html")
-	data = template.render()
-        start_response('200 OK', list(html_headers))
-        return [str(data)]
-        
+		if self.get_name(environ) != False:
+			namenow = self.get_name(environ)
+			vars = dict(name=namenow)
+			template = env.get_template("index.html")
+			data = template.render(vars)
+        		start_response('200 OK', list(html_headers))
+        		return [str(data)]
+		else:
+			headers = list(html_headers)
+			headers.append(('Location', '/login'))
+			start_response('302 Found', headers)
+			return ["Redirect to /login..."]
+
+		
+    def login( self, environ, start_response):
+		if self.get_name(environ) != False:
+			print "WTF"
+			namenow = self.get_name(environ)
+			vars = dict(name=namenow)
+			template = env.get_template("index.html")
+			data = template.render(vars)
+        		start_response('200 OK', list(html_headers))
+        		return [str(data)]
+		else:
+			template = env.get_template("login.html")
+			data = template.render()
+        		start_response('200 OK', list(html_headers))
+        		return [str(data)]
+    def register( self, environ, start_response):
+		template = env.get_template("register.html")
+		data = template.render()
+        	start_response('200 OK', list(html_headers))
+        	return [str(data)]
+	
 
     def recipes(self, environ, start_response):
-	allrecipes = db.get_all_recipes()
-	canmake = ""
-	addin=""
-	for recipe in allrecipes:
-		if(recipe.need_ingredients() == []):
-			lacking = "Yes, drink!"
-			canmake = canmake + " " + str(recipe.recipename) 
+		if self.get_name(environ) != False:
+			namenow = self.get_name(environ)
+			allrecipes = db.get_all_recipes()
+			canmake = ""
+			addin=""
+			for recipe in allrecipes:
+				if(recipe.need_ingredients() == []):
+					lacking = "Yes, drink!"
+					canmake = canmake + " " + str(recipe.recipename) 
+				else:
+					lacking = "Needs more:"
+					temp = recipe.need_ingredients()
+					lacking += str(temp[0]) + " " 
+
+				addin += "<li><div class=\"ui-grid-a\"><div class=\"ui-block-a\" style=\"width:50%\">" + recipe.recipename + "</div><div class=\"ui-block-b\" style=\"width:50%\">" + lacking + "</div></div></li>"
+
+
+			vars = dict(name=namenow, recipess=addin, canmakee = canmake)
+			template = env.get_template("recipes.html")
+			data = template.render(vars)
+			content_type = 'text/html'
+			start_response('200 OK', list(html_headers))
+			return [str(data)]
 		else:
-			lacking = "Needs more:"
-			temp = recipe.need_ingredients()
-			lacking += str(temp[0]) + " " 
-
-		addin += "<li><div class=\"ui-grid-a\"><div class=\"ui-block-a\" style=\"width:50%\">" + recipe.recipename + "</div><div class=\"ui-block-b\" style=\"width:50%\">" + lacking + "</div></div></li>"
-
-
-	vars = dict(recipess=addin, canmakee = canmake)
-	template = env.get_template("recipes.html")
-	data = template.render(vars)
-	content_type = 'text/html'
-        start_response('200 OK', list(html_headers))
-        return [str(data)]
-
+			headers = list(html_headers)
+			headers.append(('Location', '/login'))
+			start_response('302 Found', headers)
+			return ["Redirect to /login..."]
 
     def inventory(self, environ, start_response):
-	tlist = set()
-	addin=""
-	for mfg, liquor in db.get_liquor_inventory():  #for every item returned 
-    		if (mfg,liquor) in tlist:  #check if in posted list  or go on
-			continue
-    		else:
-			tlist.add((mfg,liquor)) #add to posted list 
-    			quant = db.get_liquor_amount(mfg,liquor) #get quaniity
-			newquant=str(quant)
+		if self.get_name(environ) != False:
+			namenow = self.get_name(environ)
+			tlist = set()
+			addin=""
+			for mfg, liquor in db.get_liquor_inventory():  #for every item returned 
+					if (mfg,liquor) in tlist:  #check if in posted list  or go on
+						continue
+					else:
+						tlist.add((mfg,liquor)) #add to posted list 
+						quant = db.get_liquor_amount(mfg,liquor) #get quaniity
+						newquant=str(quant)
 
-		addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + mfg + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + liquor + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + newquant + " (ml)</div></div></li>"
-	
-        vars = dict(inventory=addin)
-	template = env.get_template("inventory.html")
-	data = template.render(vars)
-	content_type = 'text/html'
-        start_response('200 OK', list(html_headers))
-        return [str(data)]
+					addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + mfg + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + liquor + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + newquant + " (ml)</div></div></li>"
+			
+			vars = dict(name=namenow,inventory=addin)
+			template = env.get_template("inventory.html")
+			data = template.render(vars)
+			content_type = 'text/html'
+			start_response('200 OK', list(html_headers))
+			return [str(data)]
+		else:
+			headers = list(html_headers)
+			headers.append(('Location', '/login'))
+			start_response('302 Found', headers)
+			return ["Redirect to /login..."]
 
     def liquort(self, environ, start_response):
-	addin=""
-	for item in db.get_bottle_types():
-		addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + item[0] + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + item[1] + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + item[2] + "</div></li>"
-	
-	vars = dict(liquort=addin)
-	template = env.get_template("liquortypes.html")
-	data = template.render(vars)
-	content_type = 'text/html'
-        start_response('200 OK', list(html_headers))
-        return [str(data)]
-
+		if self.get_name(environ) != False:
+			namenow = self.get_name(environ)
+			addin=""
+			for item in db.get_bottle_types():
+				addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + item[0] + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + item[1] + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + item[2] + "</div></li>"
+			
+			vars = dict(name=namenow,liquort=addin)
+			template = env.get_template("liquortypes.html")
+			data = template.render(vars)
+			content_type = 'text/html'
+			start_response('200 OK', list(html_headers))
+			return [str(data)]
+		else:
+			headers = list(html_headers)
+			headers.append(('Location', '/login'))
+			start_response('302 Found', headers)
+			return ["Redirect to /login..."]
 
     def error(self, environ, start_response):
         status = "404 Not Found"
@@ -115,19 +169,32 @@ class SimpleApp(object):
        
         start_response('200 OK', list(html_headers))
         return [data]
-   
+
+    def get_name(self,environ):
+	name1 = ''
+        name1_key = '*empty*'
+        if 'HTTP_COOKIE' in environ:
+            c = SimpleCookie(environ.get('HTTP_COOKIE', ''))
+            if 'Name' in c:
+                key = c.get('Name').value
+                if usernames.get(key, ''):
+			return usernames.get(key, '')
+		else:
+			return False
+	else:
+		return False
     def recv(self, environ, start_response):
-        formdata = environ['QUERY_STRING']
-        results = urlparse.parse_qs(formdata)
-	try:
-        	amount = results['amount'][0]
-	except KeyError:
-		amount = "0"
-	try:
-    	   	amount = convert.convert_to_ml(amount)
-	 	addin = "<p>Converted to ml: %s.</p>" % (amount)
-	except AssertionError:
-		addin = """\
+        	formdata = environ['QUERY_STRING']
+       		results = urlparse.parse_qs(formdata)
+		try:
+        		amount = results['amount'][0]
+		except KeyError:
+			amount = "0"
+		try:
+    	   		amount = convert.convert_to_ml(amount)
+			addin = "<p>Converted to ml: %s.</p>" % (amount)
+		except AssertionError:
+			addin = """\
 	<form action='recv'>
 		Please enter amount to convert to ml: <input type='text' name='amount' size'20'>
 		<input type='submit' value="Convert">
@@ -137,13 +204,58 @@ class SimpleApp(object):
 			<p>Possible inputs: 25ml 30 gallon  4 liter  9oz<p>
 		</div>
 """
-	vars = dict(convert=addin)
-	template = env.get_template("convert.html")
-	data = template.render(vars)
-	content_type = 'text/html'
-        start_response('200 OK', list(html_headers))
-        return [str(data)]
+		vars = dict(convert=addin)
+		template = env.get_template("convert.html")
+		data = template.render(vars)
+		content_type = 'text/html'
+        	start_response('200 OK', list(html_headers))
+        	return [str(data)]
 
+    def logem(self, environ, start_response):
+		content_type = 'text/html'
+		formdata = environ['QUERY_STRING']
+        	results = urlparse.parse_qs(formdata)
+		try:
+        		name = results['user'][0].strip()
+			passw = results['passw'][0].strip()
+		except KeyError:
+			name = ""
+			passw = ""
+        	if db.verify_user(name,passw)!=False:
+        		k = str(db.verify_user(name,passw))
+			usernames[k] = name
+        		headers = list(html_headers)
+        		headers.append(('Location', '/index'))
+        		headers.append(('Set-Cookie', 'Name=%s' % k))
+        		start_response('302 Found', headers)
+        		return ["Redirect to /index..."]
+		else:
+		
+        		headers = list(html_headers)
+        		headers.append(('Location', '/login'))
+        		start_response('302 Found', headers)
+        		return ["Redirect to /login..."]
+
+    def logout(self, environ, start_response):
+        if 'HTTP_COOKIE' in environ:
+            c = SimpleCookie(environ.get('HTTP_COOKIE', ''))
+            if 'Name' in c:
+                key = c.get('Name').value
+                name1_key = key
+		print key
+
+                if key in usernames:
+                   del usernames[key]
+                   print 'DELETING'
+
+        pair = ('Set-Cookie',
+                'Name=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT;')
+        headers = list(html_headers)
+        headers.append(('Location', '/login'))
+        headers.append(pair)
+
+        start_response('302 Found', headers)
+        return ["Redirect to /login..."]
 
     def dispatch_rpc(self, environ, start_response):
         # POST requests deliver input data via a file-like handle,
@@ -190,7 +302,6 @@ class SimpleApp(object):
 
     def rpc_add(self, a, b):
         return int(a) + int(b)
-
     def rpc_addrecipe(self,name,ingridients):
 	try:
 		name = name.strip()
@@ -263,6 +374,14 @@ class SimpleApp(object):
 	for mfg, liquor in db.get_liquor_inventory():
 		list.append((mfg,liquor))
 	return list
+
+    def rpc_register(self,user,passw,passtwo,email):
+	if passw==passtwo:
+		print user,passw,passtwo,email
+		return db.add_user(user,passw,email)
+		
+
+	
     def form(self, environ, start_response):
 	dataa = """\
 		Please enter amount to convert to ml: <input type='text' class="a" name='amount' size='20'>
@@ -299,12 +418,19 @@ class SimpleApp(object):
 		</script>
 
 """
-	vars = dict(convert=dataa)
-	template = env.get_template("convert.html")
-	data = template.render(vars)
-	content_type = 'text/html'
-        start_response('200 OK', list(html_headers))
-        return [str(data)]
+	if self.get_name(environ) != False:
+			namenow = self.get_name(environ)
+			vars = dict(name=namenow,convert=dataa)
+			template = env.get_template("convert.html")
+			data = template.render(vars)
+			content_type = 'text/html'
+        		start_response('200 OK', list(html_headers))
+        		return [str(data)]
+	else:
+			headers = list(html_headers)
+			headers.append(('Location', '/login'))
+			start_response('302 Found', headers)
+			return ["Redirect to /login..."]
 
 
     def addinv(self, environ, start_response):
