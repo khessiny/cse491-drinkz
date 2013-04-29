@@ -1,0 +1,3 @@
+ONE OF THE TESTS FAILS BECAUSE IT DOESNT HAVE THE COOKIE REQUIRED 
+Also i had the server working with post 100%, but after i added the cookies and made it so that it wont load any other page but login/register without a valid cookie.
+YOU CAN STILL TEST POST BY DOING THE REGISTER.
