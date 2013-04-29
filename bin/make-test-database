@@ -29,6 +29,11 @@ def main(args):
 	db.add_recipe(r)
 	r = recipes.Recipe('whiskey bath', [('blended scotch', '5.5 liter')])
 	db.add_recipe(r)
+
+	db.upvote_recipe('scotch on the rocks')
+	db.upvote_recipe('scotch on the rocks')
+	db.upvote_recipe('whiskey bath')
+
 	try:
 		filename = args[1]
 	except IndexError:

@@ -30,7 +30,8 @@ dispatch = {
     '/add'  : 'addstuff',
     '/addinv' : 'addinv',
     '/addbottletype' : 'addbottletype',
-    '/addrecipe' : 'addrecipe'
+    '/addrecipe' : 'addrecipe',
+    '/upvote' : 'upvote'
 }
 html_headers = [('Content-type', 'text/html')]
 usernames = {}
@@ -53,7 +54,7 @@ class SimpleApp(object):
     def index(self, environ, start_response):
 		if self.get_name(environ) != False:
 			namenow = self.get_name(environ)
-			vars = dict(name=namenow)
+			vars = dict(title="Main",name=namenow)
 			template = env.get_template("index.html")
 			data = template.render(vars)
         		start_response('200 OK', list(html_headers))
@@ -101,14 +102,40 @@ class SimpleApp(object):
 					temp = recipe.need_ingredients()
 					lacking += str(temp[0]) + " " 
 
-				addin += "<li><div class=\"ui-grid-a\"><div class=\"ui-block-a\" style=\"width:50%\">" + recipe.recipename + "</div><div class=\"ui-block-b\" style=\"width:50%\">" + lacking + "</div></div></li>"
-
-
-			vars = dict(name=namenow, recipess=addin, canmakee = canmake)
+				addin += "<li><div class=\"ui-grid-c\"><div class=\"ui-block-a\" style=\"width:25%\">" + recipe.recipename + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + lacking +"</div>"
+				addin += "<div class=\"ui-block-c\" style=\"width:25%\">" + str(db.get_recipe_rating(recipe)) + "</div>"
+				addin += "<div class=\"ui-block-d\" style=\"width:25%\">"
+				addin += "<button onclick=\"upvote('" 
+				addin += recipe.recipename
+				addin += "');\">"
+				addin += "Like</button></div></div></li>"
+				addin += """\
+			<script>
+			function upvote(recipe_name){
+                 	$.ajax({
+                        	url: '/rpc',
+                        	data: JSON.stringify ({method:'upvote_recipe', params:[recipe_name,], id:"0"} ),
+                        	type: "POST",
+                        	dataType: "json",
+                        	success: function (data) { success(data)},
+                        	error: function (err)  { erroring(err) }
+                	});
+                }
+		function success(data){
+			alert('Thanks for your vote!');
+			location.reload();
+			}
+		function erroring(err){
+			alert("Something went wrong server side, try again.");
+			}
+		</script>
+"""
+			vars = dict(title="Recipes",name=namenow, recipess=addin, canmakee = canmake)
 			template = env.get_template("recipes.html")
 			data = template.render(vars)
 			content_type = 'text/html'
 			start_response('200 OK', list(html_headers))
+			print str(data)
 			return [str(data)]
 		else:
 			headers = list(html_headers)
@@ -131,7 +158,7 @@ class SimpleApp(object):
 
 					addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + mfg + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + liquor + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + newquant + " (ml)</div></div></li>"
 			
-			vars = dict(name=namenow,inventory=addin)
+			vars = dict(title="Inventory",name=namenow,inventory=addin)
 			template = env.get_template("inventory.html")
 			data = template.render(vars)
 			content_type = 'text/html'
@@ -150,7 +177,7 @@ class SimpleApp(object):
 			for item in db.get_bottle_types():
 				addin += "<li><div class=\"ui-grid-b\"><div class=\"ui-block-a\" style=\"width:50%\">" + item[0] + "</div><div class=\"ui-block-b\" style=\"width:25%\">" + item[1] + "</div><div class=\"ui-block-c\" style=\"width:25%\">" + item[2] + "</div></li>"
 			
-			vars = dict(name=namenow,liquort=addin)
+			vars = dict(title="LiquorTypes",name=namenow,liquort=addin)
 			template = env.get_template("liquortypes.html")
 			data = template.render(vars)
 			content_type = 'text/html'
@@ -299,6 +326,26 @@ class SimpleApp(object):
 
     def rpc_hello(self):
         return 'world!'
+    
+    def rpc_upvote_recipe(self, recipeName):
+	print recipeName
+	db.upvote_recipe(recipeName)
+
+    def upvote(self, environ, start_response):
+	formdata = environ['QUERY_STRING']
+	results = urlparse.parse_qs(formdata)
+	addin = '<p>Thanks for your vote</p>'
+	template = env.get_template("add.html")
+	vars = dict(form=addin)
+	data = template.render(vars)
+	
+	#recipe = db.get_recipe(name)
+        #db.upvote_recipe(recipe)
+
+	content_type = 'text/html'
+	start_response('200 OK', list(html_headers))
+	return [str(data)]
+
 
     def rpc_add(self, a, b):
         return int(a) + int(b)
@@ -420,7 +467,7 @@ class SimpleApp(object):
 """
 	if self.get_name(environ) != False:
 			namenow = self.get_name(environ)
-			vars = dict(name=namenow,convert=dataa)
+			vars = dict(title="Convert",name=namenow,convert=dataa)
 			template = env.get_template("convert.html")
 			data = template.render(vars)
 			content_type = 'text/html'

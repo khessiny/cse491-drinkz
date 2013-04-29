@@ -23,14 +23,16 @@ _bottle_types_db = set([])
 _inventory_db = dict()
 _recipe_db=dict()
 _auth=set([])
+_rating_db = dict()
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
-    global _bottle_types_db, _inventory_db, _recipe_db, _auth
+    global _bottle_types_db, _inventory_db, _recipe_db, _auth, _rating_db
     _bottle_types_db =set([])
     _inventory_db = dict()
     _recipe_db= dict()
     _auth=set([])
+    _rating_db = dict()
 
 def save_db(filename):
 	try:
@@ -44,6 +46,7 @@ def save_db(filename):
 		cur.execute("CREATE TABLE Auth(user STRING, pass STRING, email STRING)")
 		cur.execute("CREATE TABLE Inventory(mfg STRING, liquor STRING, amount FLOAT)")
 		cur.execute("CREATE TABLE Recipes(name STRING, ing BUFFER)")
+		cur.execute("CREATE TABLE Ratings(name STRING, rating INT)")
 		for (m, l) in _inventory_db:
 			mfg = m
 			liquor = l
@@ -59,7 +62,9 @@ def save_db(filename):
 			templist = recipe.singridients
 			finallist = buffer(myListToStr(templist))
 			cur.execute("insert into Recipes values (?,?)",(name,finallist))
-		
+		for key in _rating_db:
+			ratt=_rating_db[key]
+			cur.execute("insert into Ratings values (?,?)",(key,ratt))
 		db.commit()
 		cur.close()
 		#db.close()
@@ -123,6 +128,11 @@ def load_db(filename):
 			add_recipe(r)
 		#for k,v in _recipe_db.items():
     			# k,v.singridients
+		cur.execute("Select * FROM Ratings")
+		rows = cur.fetchall()
+		for row in rows:
+			 name, rating = row
+			 _rating_db[name] = rating
 		db.commit()
 		cur.close()
 
@@ -234,7 +244,20 @@ def add_recipe(recipe):
 	raise DuplicateRecipeName()
    else:
       _recipe_db[recipe.recipename] = recipe   #store the whole recipe object
+      _rating_db[recipe.recipename] = 0        #recipe rating starts at 0
 
+
+def upvote_recipe(recipename):
+   if recipename in _recipe_db:
+	_rating_db[recipename] += 1
+   else:
+	return -1
+
+def get_recipe_rating(recipe):
+   if recipe.recipename in _recipe_db:
+	return _rating_db[recipe.recipename]
+   else:
+	return -1
 
 def get_recipe(name):
     #retrieve the recipe
